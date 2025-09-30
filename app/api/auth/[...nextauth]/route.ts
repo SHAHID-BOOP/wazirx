@@ -1,56 +1,8 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import db from "../../../db"; 
+import { authConfig } from "@/app/lib/auth";
+
 
 //signup 
-const handler = NextAuth({
-    providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? ""
-        })
-    ],
-    callbacks: {
-        async signIn({ user, account, profile, email, credentials}) {
-            if (account?.provider === "Google") {
-                const email = user.email;
-                if(!email) {
-                    return false
-                }
-
-                const userDb =  db.user.findFirst({
-                    where: {
-                        username: email
-                    }
-                })
-
-                if(await userDb) {
-                    return true;
-                }
-
-                await db.user.create({
-                    data: {
-                        username: email,
-                        provider: "Google",
-                        solWallet: {
-                            create: {
-                                publicKey: "",
-                                privateKey: ""
-                            }
-                        },
-                        inrWallet: {
-                            create: {
-                                balance: 0
-                            }
-                        }
-                    }
-                })
-
-            }
-            
-            return true;
-        }
-    }
-})
+const handler = NextAuth(authConfig);
 
 export { handler as GET, handler as POST };
